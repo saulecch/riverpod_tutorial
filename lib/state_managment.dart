@@ -4,41 +4,66 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 @immutable
 class CartItem {
   // variables
-  final int number;
+  int? id;
+  final String name;
+  final int quantity;
   final bool inCart;
 
   // constructor
-  const CartItem({required this.number, required this.inCart});
+  CartItem(
+      {this.id,
+      required this.name,
+      required this.quantity,
+      required this.inCart});
 
   // funcion para cambiar alguno de los parametros
-  CartItem copyWith({int? number, bool? inCart}) {
+  CartItem copyWith({String? name, int? quantity, bool? inCart}) {
     return CartItem(
-        number: number ?? this.number, inCart: inCart ?? this.inCart);
+        id: this.id,
+        name: name ?? this.name,
+        quantity: quantity ?? this.quantity,
+        inCart: inCart ?? this.inCart);
   }
 }
 
 // Genera una lista de tipo CartItem del 0 al 9 todos con el valor inCart falso
-var cartList =
-    List<CartItem>.generate(10, (i) => CartItem(number: i++, inCart: false));
-
+// var cartList = List<CartItem>.generate(
+//     3, (i) => CartItem(id: i++, name: 'Item', quantity: i++, inCart: false));
+var cartList = List<CartItem>.empty();
 // Notifier del estado de la lista de items de compra
 class CartNotifier extends StateNotifier<List<CartItem>> {
   CartNotifier() : super(cartList);
+  int _idCounter = 0;
+  int _generateUniqueID() {
+    _idCounter++;
+    return _idCounter;
+  }
 
   // añade un nuevo item, reemplazando la lista anterior, porque state es immutable
   void add(CartItem item) {
+    final uniqueID = _generateUniqueID();
+    item.id = uniqueID;
     state = [...state, item];
   }
 
   // cambia el estado de inCart al valor contrario, falso -> verdadero y viceversa
-  void toggle(int itemNumber) {
+  void toggle(int itemId) {
     state = [
       for (final item in state)
-        if (item.number == itemNumber)
-          item.copyWith(inCart: !item.inCart)
-        else
-          item,
+        if (item.id == itemId) item.copyWith(inCart: !item.inCart) else item,
     ];
+  }
+
+  // edita el item segun el id
+  void edit(int id, String name, int quantity) {
+    state[id] = state[id].copyWith(name: name, quantity: quantity);
+    state = [...state];
+  }
+
+  // elimina el item segun el id
+  void delete(int id) {
+    state.removeWhere((element) => element.id == id);
+    state = [...state];
   }
 
   // retorna un entero para saber el total de items en la lista completa

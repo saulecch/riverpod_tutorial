@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_tutorial/forms/addForm.dart';
+import 'package:riverpod_tutorial/forms/editForm.dart';
 import 'package:riverpod_tutorial/state_managment.dart';
 
 void main() {
@@ -14,8 +16,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+      theme: ThemeData.dark(
+        useMaterial3: true,
       ),
       home: const MyHomePage(),
     );
@@ -40,7 +42,7 @@ class MyHomePage extends ConsumerWidget {
         title: const Text('Lista del super'),
         actions: [
           DropdownButton(
-              dropdownColor: Colors.blue,
+              // dropdownColor: Colors.blue,
               style: const TextStyle(color: Colors.white),
               icon: const Icon(
                 Icons.arrow_drop_down,
@@ -66,14 +68,27 @@ class MyHomePage extends ConsumerWidget {
         padding: const EdgeInsets.all(8.0),
         child: ListView.separated(
             itemBuilder: ((context, index) {
-              return Card(
-                elevation: 2,
-                child: CheckboxListTile(
-                  title: Text('Item de compra ${cartItems[index].number}'),
-                  value: cartItems[index].inCart,
-                  onChanged: (value) => ref
-                      .read(cartListProvider.notifier)
-                      .toggle(cartItems[index].number),
+              return GestureDetector(
+                onHorizontalDragEnd: (details) {
+                  showModalBottomSheet(
+                      context: context,
+                      builder: (context) {
+                        return EditItem(
+                            id: cartItems[index].id!,
+                            currentName: cartItems[index].name.toString(),
+                            currentQuantity: cartItems[index].quantity);
+                      });
+                },
+                child: Card(
+                  elevation: 2,
+                  child: CheckboxListTile(
+                    title: Text(
+                        '${cartItems[index].quantity} ${cartItems[index].name}'),
+                    value: cartItems[index].inCart,
+                    onChanged: (value) => ref
+                        .read(cartListProvider.notifier)
+                        .toggle(cartItems[index].id!),
+                  ),
                 ),
               );
             }),
@@ -84,9 +99,11 @@ class MyHomePage extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
-        onPressed: () => ref
-            .read(cartListProvider.notifier)
-            .add(CartItem(number: totalItems, inCart: false)),
+        onPressed: () => showModalBottomSheet(
+            context: context,
+            builder: (context) {
+              return AddItem();
+            }),
       ),
     );
   }
